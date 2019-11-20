@@ -73,12 +73,12 @@ class local_session_dynamodb_handler extends \core\session\handler {
         global $CFG;
 
         if (!isset($CFG->session_dynamodb_region)) {
-            throw new exception('sessionhandlerproblem', 'error', '', null,
+            throw new core\session\exception('sessionhandlerproblem', 'error', '', null,
                     '$CFG->session_dynamodb_region must be specified in config.php');
         }
 
         if (!isset($CFG->session_dynamodb_table)) {
-            throw new exception('sessionhandlerproblem', 'error', '', null,
+            throw new core\session\exception('sessionhandlerproblem', 'error', '', null,
                     '$CFG->session_dynamodb_table must be specified in config.php');
         }
 

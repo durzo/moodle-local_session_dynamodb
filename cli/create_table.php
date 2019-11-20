@@ -65,11 +65,11 @@ if ($options['writeCapacityUnits'] == '' ) {
 }
 
 if (!isset($CFG->session_dynamodb_region)) {
-    throw new exception('sessionhandlerproblem', 'error', '', null,
+    throw new core\session\exception('sessionhandlerproblem', 'error', '', null,
             '$CFG->session_dynamodb_region must be specified in config.php');
 }
 if (!isset($CFG->session_dynamodb_table)) {
-    throw new exception('sessionhandlerproblem', 'error', '', null,
+    throw new core\session\exception('sessionhandlerproblem', 'error', '', null,
             '$CFG->session_dynamodb_table must be specified in config.php');
 }
 if (isset($CFG->session_dynamodb_endpoint)) {
