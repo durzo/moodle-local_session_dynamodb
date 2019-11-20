@@ -3,10 +3,10 @@ define('CLI_SCRIPT', true);
 
 require_once(dirname(dirname(dirname(__DIR__))) . '/config.php');
 require_once($CFG->libdir.'/clilib.php');      // cli only functions
-require_once(dirname(__DIR__) . '/vendor/autoload.php');
+require_once($CFG->dirroot . '/local/aws/sdk/aws-autoloader.php');
 
 use Aws\DynamoDb\DynamoDbClient;
-use Aws\DynamoDb\Session\SessionHandler;
+use Aws\DynamoDb\SessionHandler;
 
 // Define the input options.
 $longparams = array(
@@ -75,28 +75,44 @@ if (!isset($CFG->session_dynamodb_table)) {
 if (isset($CFG->session_dynamodb_endpoint)) {
     $endpoint = $CFG->session_dynamodb_endpoint;
 }
+
+$credentials = [];
+
 if (isset($CFG->session_dynamodb_aws_key)) {
-    $aws_key = $CFG->session_dynamodb_aws_key;
+    $credentials['key'] = $CFG->session_dynamodb_aws_key;
 }
 if (isset($CFG->session_dynamodb_aws_secret)) {
-    $aws_secret = $CFG->session_dynamodb_aws_secret;
+    $credentials['secret'] = $aws_secret = $CFG->session_dynamodb_aws_secret;
 }
 
-$client = DynamoDbClient::factory([
-            'version' => 'latest',
-            'region' => $CFG->session_dynamodb_region,
-            'endpoint' => isset($endpoint) ? $endpoint : null,
-            'credentials' => array(
-                'key'    => isset($aws_key) ? $aws_key : null,
-                'secret' => isset($aws_secret) ? $aws_secret : null,
-            ),
-        ]);
-$handler = SessionHandler::factory([
-            'dynamodb_client' => $client,
-            'table_name' => $CFG->session_dynamodb_table,
-            'session_lifetime' => $CFG->sessiontimeout,
-            'automatic_gc' => 0,
-        ]);
+$params = [
+    'version' => 'latest',
+    'region' => $CFG->session_dynamodb_region,
+    'endpoint' => isset($endpoint) ? $endpoint : null];
+if ($credentials) {
+    $params['credentials'] = $credentials;
+}
 
 echo "Creating sessions table...\n";
-$handler->createSessionsTable($readCapacityUnits, $writeCapacityUnits);
+
+$client = DynamoDbClient::factory($params);
+
+$result = $client->createTable([
+    'AttributeDefinitions' => [
+        [
+            'AttributeName' => 'id',
+            'AttributeType' => 'S',
+        ],
+    ],
+    'KeySchema' => [
+        [
+            'AttributeName' => 'id',
+            'KeyType' => 'HASH',
+        ],
+    ],
+    'ProvisionedThroughput' => [
+        'ReadCapacityUnits' => (int)$readCapacityUnits,
+        'WriteCapacityUnits' => (int)$writeCapacityUnits,
+    ],
+    'TableName' => $CFG->session_dynamodb_table,
+]);

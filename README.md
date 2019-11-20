@@ -41,10 +41,55 @@ sudo -u www-data php local/session_dynamodb/cli/create_table.php -h
 ## Scheduled Task
 
 When keys expire or get deleted in DynamoDB they do not get removed until garbage collection is called.  
-This is an expensive operation, so we do not want to do this on every cron run.  
+This is a compute expensive operation, so we do not want to do this on every cron run.  
 This plugin creates a Scheduled Task that runs at 02:00 once a day to perform DynamoDB garbage collection  
 The schedule can be modified through: Site Administration / Server / Scheduled Tasks  
-It is recommended to run this task only when your Moodle site is idle, or during low activity. 
+It is recommended to run this task only when your Moodle site is idle, or during low activity.
+
+Alternatively, modify your DynamoDB table and enable TTL on the 'expires' attribute for automatic garbage collection at the cost of table performance
+
+## AWS IAM Policy
+
+To use the plugin your Role or User will need the following IAM policy, replacing "tablename" with the name of your DynamoDB table.
+Note: This policy does not allow for table creation, it is recommended to use API keys for the table creation and then switch to using a Role with this policy.
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:DescribeTable",
+                "dynamodb:DeleteItem",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:Query",
+                "dynamodb:UpdateItem",
+                "dynamodb:GetRecords"
+            ],
+            "Resource": [
+                "arn:aws:dynamodb:us-east-2:*:table/tablename/stream/*",
+                "arn:aws:dynamodb:us-east-2:*:table/tablename",
+                "arn:aws:dynamodb:us-east-2:*:table/tablename/index/*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:ListTables",
+                "dynamodb:DescribeLimits"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
 
 ## LICENSE
 

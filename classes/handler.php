@@ -24,7 +24,7 @@
 
 //namespace core\session;
 
-require_once(dirname(__DIR__) . '/vendor/autoload.php');
+require_once($CFG->dirroot . '/local/aws/sdk/aws-autoloader.php');
 
 use Aws\DynamoDb\DynamoDbClient;
 
@@ -86,25 +86,27 @@ class local_session_dynamodb_handler extends \core\session\handler {
             $this->endpoint = $CFG->session_dynamodb_endpoint;
         }
 
-        if (isset($CFG->session_dynamodb_aws_key)) {
+        $credentials = [];
+
+        if (!empty($CFG->session_dynamodb_aws_key)) {
             $this->aws_key = $CFG->session_dynamodb_aws_key;
+            $credentials['key'] = $this->aws_key;
         }
 
-        if (isset($CFG->session_dynamodb_aws_secret)) {
+        if (!empty($CFG->session_dynamodb_aws_secret)) {
             $this->aws_secret = $CFG->session_dynamodb_aws_secret;
+            $credentials['secret'] = $this->aws_secret;
         }
 
-        $this->client = DynamoDbClient::factory([
+        $params = [
             'version' => 'latest',
             'region' => $CFG->session_dynamodb_region,
-            'endpoint' => $this->endpoint,
-            'credentials' => array(
-                'key'    => $this->aws_key,
-                'secret' => $this->aws_secret,
-            ),
-        ]);
+            'endpoint' => $this->endpoint];
+        if ($credentials) {
+            $params['credentials'] = $credentials;
+        }
+        $this->client = DynamoDbClient::factory($params);
         
-        //    'dynamodb_client' => $this->client,
         $this->handler = $this->client->registerSessionHandler([
             'table_name' => $CFG->session_dynamodb_table,
             'session_lifetime' => $CFG->sessiontimeout,
