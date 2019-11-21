@@ -1,9 +1,7 @@
 # Moodle DynamoDB Session Handler
 This plugin contains:
 
-1: The AWS PHP SDK
-
-2: A Scheduled Task to perform DynamoDB Garbage Collection on expired keys.
+1: A Scheduled Task to perform DynamoDB Garbage Collection on expired keys.
 
 2: The DynamoDB Session Handler.
 
@@ -11,10 +9,12 @@ This plugin contains:
 
 ## Install Instructions
 
-To install it using git, type this command in the root of your Moodle install:
+To install using git, type this command in the root of your Moodle install:
 ```
 git clone https://github.com/durzo/moodle-local_session_dynamodb.git local/session_dynamodb
 ```
+
+This plugin also depends on *local_aws* - get the code from `https://github.com/catalyst/moodle-local_aws` and clone or copy it into `<moodledir>/local/aws`
 
 ## Configuration
 
@@ -50,7 +50,7 @@ Alternatively, modify your DynamoDB table and enable TTL on the 'expires' attrib
 
 ## AWS IAM Policy
 
-To use the plugin your Role or User will need the following IAM policy, replacing "tablename" with the name of your DynamoDB table.
+To use the plugin your Role or User will need the following IAM policy, replacing "us-east-2" with your region and "tablename" with the name of your DynamoDB table.
 Note: This policy does not allow for table creation, it is recommended to use API keys for the table creation and then switch to using a Role with this policy.
 
 ```
