@@ -66,6 +66,11 @@ class local_session_dynamodb_handler extends \core\session\handler {
     protected $aws_key = null;
     protected $aws_secret = null;
 
+    protected $locking = true;
+    protected $max_lock_wait_time = 120;
+    protected $min_lock_retry_microtime = 5000;
+    protected $max_lock_retry_microtime = 50000;
+
     /**
      * Create new instance of handler.
      */
@@ -105,12 +110,33 @@ class local_session_dynamodb_handler extends \core\session\handler {
         if ($credentials) {
             $params['credentials'] = $credentials;
         }
+
+        if (!empty($CFG->session_dynamodb_locking)) {
+            $this->locking = $CFG->session_dynamodb_locking;
+        }
+
+        if (!empty($CFG->session_dynamodb_max_lock_wait_time)) {
+            $this->max_lock_wait_time = $CFG->session_dynamodb_max_lock_wait_time;
+        }
+
+        if (!empty($CFG->session_dynamodb_min_lock_retry_microtime)) {
+            $this->min_lock_retry_microtime = $CFG->session_dynamodb_min_lock_retry_microtime;
+        }
+
+        if (!empty($CFG->session_dynamodb_max_lock_retry_microtime)) {
+            $this->max_lock_retry_microtime = $CFG->session_dynamodb_max_lock_retry_microtime;
+        }
+
         $this->client = DynamoDbClient::factory($params);
         
         $this->handler = $this->client->registerSessionHandler([
             'table_name' => $CFG->session_dynamodb_table,
             'session_lifetime' => $CFG->sessiontimeout,
             'automatic_gc' => 0,
+            'locking' => $this->locking,
+            'max_lock_wait_time' => $this->max_lock_wait_time,
+            'min_lock_retry_microtime' => $this->min_lock_retry_microtime,
+            'max_lock_retry_microtime' => $this->max_lock_retry_microtime
         ]);
     }
 
